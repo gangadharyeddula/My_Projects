@@ -1,12 +1,9 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
-import logo from "../assets/college-logo.png";
 import { toast } from "react-toastify";
-import Card from "../components/ui/Card";
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
+import logo from "../assets/college-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,10 +17,10 @@ const Login = () => {
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const handleLogin = async (e) => {
@@ -32,10 +29,14 @@ const Login = () => {
 
     try {
       const response = await API.post("/auth/login", formData);
-      const token = response.data.access_token || response.data.token;
+
+      const token =
+        response.data.access_token ||
+        response.data.token ||
+        response.data.accessToken;
 
       if (!token) {
-        setError("Token not received from backend");
+        setError("Token not received");
         return;
       }
 
@@ -47,94 +48,236 @@ const Login = () => {
 
       const userData = userResponse.data.user || userResponse.data;
 
-      if (!userData || !userData.role) {
-        setError("User details not received properly");
-        return;
-      }
-
       login(token, userData);
+
       toast.success("Login Successful");
 
-      if (userData.role === "student") {
-        navigate("/student/dashboard");
-      } else if (userData.role === "company") {
-        navigate("/company/dashboard");
-      } else if (userData.role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        setError("Invalid user role");
+      switch (userData.role) {
+        case "student":
+          navigate("/student/dashboard");
+          break;
+
+        case "company":
+          navigate("/company/dashboard");
+          break;
+
+        case "admin":
+          navigate("/admin/dashboard");
+          break;
+
+        default:
+          setError("Invalid user role");
       }
     } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
-      toast.error("Invalid Email or Password");
-      setError(err.response?.data?.detail || err.response?.data?.message || "Login failed");
+      console.error(err);
+
+      setError(
+        err.response?.data?.detail ||
+          err.response?.data?.message ||
+          "Invalid Email or Password"
+      );
+
+      toast.error("Login Failed");
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-[32px] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-10 text-white shadow-2xl shadow-slate-950/20">
-          <img
-            src={logo}
-            alt="College Logo"
-            className="h-20 w-20 rounded-full bg-white/10 p-3 ring-1 ring-white/10"
-          />
-          <div className="mt-10 space-y-5">
-            <h1 className="text-3xl font-semibold">Newton’s Institute of Engineering</h1>
-            <p className="max-w-xl text-base leading-7 text-slate-300">
-              Welcome to the placement portal for students, companies, and admin.
-              Sign in to manage applications, jobs, and campus placements with ease.
-            </p>
-          </div>
-        </section>
+    <div style={styles.container}>
+      <div style={styles.leftPanel}>
+        <img src={logo} alt="College Logo" style={styles.logo} />
 
-        <Card className="p-8">
-          <div className="mb-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Login</p>
-            <h2 className="mt-3 text-3xl font-semibold text-slate-950">Sign in to your account</h2>
-          </div>
+        <h1 style={styles.heading}>
+          Newton's Institute of Engineering
+        </h1>
+
+        <p style={styles.description}>
+          Welcome to the Placement Portal.
+          <br />
+          Login as Student, Company or Admin to continue.
+        </p>
+      </div>
+
+      <div style={styles.rightPanel}>
+        <div style={styles.card}>
+          <h2 style={styles.loginTitle}>Login</h2>
 
           {error && (
-            <div className="mb-4 rounded-3xl bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm">
+            <div style={styles.errorBox}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <Input
-              label="Email address"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              required
-            />
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-            />
-            <Button type="submit" className="w-full">
-              Login
-            </Button>
-          </form>
+          <form onSubmit={handleLogin}>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            Don’t have an account?{' '}
-            <Link to="/register" className="font-semibold text-slate-900 hover:text-slate-700">
-              Register
-            </Link>
-          </p>
-        </Card>
+            <div style={styles.formGroup}>
+              <label>Email</label>
+
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter Email"
+                style={styles.input}
+                required
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label>Password</label>
+
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter Password"
+                style={styles.input}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              style={styles.button}
+            >
+              Login
+            </button>
+
+            <p style={styles.registerText}>
+              Don't have an account?{" "}
+              <Link
+                to="/register"
+                style={styles.link}
+              >
+                Register
+              </Link>
+            </p>
+
+          </form>
+        </div>
       </div>
     </div>
   );
+};
+
+const styles = {
+    container: {
+    display: "flex",
+    minHeight: "100vh",
+    background: "#f1f5f9",
+    flexWrap: "wrap",
+  },
+
+  leftPanel: {
+    flex: 1,
+    minWidth: "350px",
+    background: "linear-gradient(135deg,#1e3a8a,#2563eb)",
+    color: "#fff",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "50px",
+    textAlign: "center",
+  },
+
+  logo: {
+    width: "130px",
+    height: "130px",
+    background: "#fff",
+    borderRadius: "50%",
+    padding: "10px",
+    marginBottom: "25px",
+    objectFit: "contain",
+  },
+
+  heading: {
+    fontSize: "36px",
+    marginBottom: "18px",
+    lineHeight: 1.3,
+  },
+
+  description: {
+    maxWidth: "420px",
+    fontSize: "17px",
+    lineHeight: "1.8",
+    opacity: 0.95,
+  },
+
+  rightPanel: {
+    flex: 1,
+    minWidth: "350px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "40px",
+  },
+
+  card: {
+    width: "100%",
+    maxWidth: "420px",
+    background: "#fff",
+    borderRadius: "18px",
+    padding: "40px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+  },
+
+  loginTitle: {
+    textAlign: "center",
+    marginBottom: "30px",
+    color: "#1e293b",
+    fontSize: "30px",
+  },
+
+  errorBox: {
+    background: "#fee2e2",
+    color: "#b91c1c",
+    padding: "12px",
+    borderRadius: "8px",
+    marginBottom: "18px",
+    textAlign: "center",
+  },
+
+  formGroup: {
+    display: "flex",
+    flexDirection: "column",
+    marginBottom: "18px",
+  },
+
+  input: {
+    marginTop: "8px",
+    padding: "14px",
+    border: "1px solid #cbd5e1",
+    borderRadius: "10px",
+    fontSize: "15px",
+    outline: "none",
+  },
+
+  button: {
+    width: "100%",
+    padding: "15px",
+    background: "#2563eb",
+    color: "#fff",
+    border: "none",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "600",
+    marginTop: "10px",
+  },
+
+  registerText: {
+    marginTop: "20px",
+    textAlign: "center",
+    color: "#475569",
+  },
+
+  link: {
+    color: "#2563eb",
+    textDecoration: "none",
+    fontWeight: "600",
+  },
 };
 
 export default Login;
