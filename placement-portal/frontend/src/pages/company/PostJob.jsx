@@ -14,32 +14,45 @@ const PostJob = () => {
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [posting, setPosting] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setMessage("");
     setError("");
 
     const payload = {
       ...formData,
-      skills_required: formData.skills_required
-        .split(",")
-        .map((skill) => skill.trim())
-        .filter((skill) => skill !== ""),
+
+      skills_required:
+        formData.skills_required
+          .split(",")
+          .map((skill) => skill.trim())
+          .filter(Boolean),
     };
 
     try {
-      // FIXED ENDPOINT
-      const response = await API.post("/jobs/", payload);
+      setPosting(true);
 
-      setMessage(response.data.message || "Job posted successfully");
+      const response = await API.post(
+        "/jobs/",
+        payload
+      );
+
+      setMessage(
+        response.data.message ||
+          "Job posted successfully"
+      );
 
       setFormData({
         title: "",
@@ -50,8 +63,17 @@ const PostJob = () => {
         deadline: "",
       });
     } catch (err) {
-      console.error("Post job error:", err.response?.data || err.message);
-      setError(err.response?.data?.detail || "Failed to post job");
+      console.error(
+        "Post job error:",
+        err.response?.data || err.message
+      );
+
+      setError(
+        err.response?.data?.detail ||
+          "Failed to post job"
+      );
+    } finally {
+      setPosting(false);
     }
   };
 
@@ -62,71 +84,146 @@ const PostJob = () => {
       subtitle="Create new placement opportunities for students"
     >
       <div style={styles.card}>
-        {message && <p style={styles.success}>{message}</p>}
-        {error && <p style={styles.error}>{error}</p>}
+        <div style={styles.header}>
+          <h2 style={styles.title}>
+            Job Information
+          </h2>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <input
-            type="text"
-            name="title"
-            placeholder="Job Title"
-            value={formData.title}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
+          <p style={styles.description}>
+            Enter complete job details so students
+            can understand the opportunity before
+            applying.
+          </p>
+        </div>
 
-          <textarea
-            name="description"
-            placeholder="Job Description"
-            value={formData.description}
-            onChange={handleChange}
-            style={styles.textarea}
-            rows="5"
-            required
-          />
+        {message && (
+          <div style={styles.success}>
+            {message}
+          </div>
+        )}
 
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={formData.location}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
+        {error && (
+          <div style={styles.error}>
+            {error}
+          </div>
+        )}
 
-          <input
-            type="text"
-            name="salary"
-            placeholder="Salary"
-            value={formData.salary}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
+        <form
+          onSubmit={handleSubmit}
+          style={styles.form}
+        >
+          <div style={styles.field}>
+            <label style={styles.label}>
+              Job Title
+            </label>
 
-          <input
-            type="text"
-            name="skills_required"
-            placeholder="Skills Required (comma separated)"
-            value={formData.skills_required}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
+            <input
+              type="text"
+              name="title"
+              placeholder="Example: Software Engineer"
+              value={formData.title}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
 
-          <input
-            type="date"
-            name="deadline"
-            value={formData.deadline}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
+          <div style={styles.field}>
+            <label style={styles.label}>
+              Location
+            </label>
 
-          <button type="submit" style={styles.button}>
-            Post Job
+            <input
+              type="text"
+              name="location"
+              placeholder="Example: Hyderabad"
+              value={formData.location}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label}>
+              Salary / Package
+            </label>
+
+            <input
+              type="text"
+              name="salary"
+              placeholder="Example: ₹6 LPA"
+              value={formData.salary}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label}>
+              Application Deadline
+            </label>
+
+            <input
+              type="date"
+              name="deadline"
+              value={formData.deadline}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+
+          <div style={styles.fullWidth}>
+            <label style={styles.label}>
+              Skills Required
+            </label>
+
+            <input
+              type="text"
+              name="skills_required"
+              placeholder="Python, FastAPI, React, MongoDB"
+              value={formData.skills_required}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+
+            <span style={styles.helpText}>
+              Separate multiple skills using commas.
+            </span>
+          </div>
+
+          <div style={styles.fullWidth}>
+            <label style={styles.label}>
+              Job Description
+            </label>
+
+            <textarea
+              name="description"
+              placeholder="Describe the role, responsibilities and requirements..."
+              value={formData.description}
+              onChange={handleChange}
+              style={styles.textarea}
+              rows="7"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={posting}
+            style={{
+              ...styles.button,
+              ...(posting
+                ? styles.disabledButton
+                : {}),
+            }}
+          >
+            {posting
+              ? "Posting Job..."
+              : "Post Job"}
           </button>
         </form>
       </div>
@@ -136,32 +233,93 @@ const PostJob = () => {
 
 const styles = {
   card: {
+    width: "100%",
+    minWidth: 0,
     background: "#fff",
     borderRadius: "16px",
-    padding: "28px",
-    boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+    padding: "clamp(18px, 3vw, 28px)",
+    boxShadow:
+      "0 8px 24px rgba(0,0,0,0.06)",
+    boxSizing: "border-box",
   },
+
+  header: {
+    marginBottom: "24px",
+  },
+
+  title: {
+    margin: 0,
+    color: "#1e293b",
+    fontSize: "21px",
+  },
+
+  description: {
+    margin: "8px 0 0",
+    color: "#64748b",
+    fontSize: "14px",
+    lineHeight: "1.6",
+  },
+
   form: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fit, minmax(min(300px, 100%), 1fr))",
+    gap: "18px",
+  },
+
+  field: {
+    minWidth: 0,
     display: "flex",
     flexDirection: "column",
-    gap: "16px",
+    gap: "8px",
   },
+
+  fullWidth: {
+    minWidth: 0,
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    gridColumn: "1 / -1",
+  },
+
+  label: {
+    color: "#334155",
+    fontSize: "14px",
+    fontWeight: "600",
+  },
+
   input: {
+    width: "100%",
+    minWidth: 0,
     padding: "14px 16px",
     borderRadius: "10px",
     border: "1px solid #cbd5e1",
     fontSize: "15px",
     outline: "none",
+    boxSizing: "border-box",
   },
+
   textarea: {
+    width: "100%",
+    minWidth: 0,
     padding: "14px 16px",
     borderRadius: "10px",
     border: "1px solid #cbd5e1",
     fontSize: "15px",
+    fontFamily: "inherit",
     outline: "none",
     resize: "vertical",
+    boxSizing: "border-box",
   },
+
+  helpText: {
+    color: "#64748b",
+    fontSize: "12px",
+  },
+
   button: {
+    gridColumn: "1 / -1",
+    width: "100%",
     padding: "14px",
     borderRadius: "10px",
     border: "none",
@@ -171,13 +329,26 @@ const styles = {
     fontWeight: "600",
     cursor: "pointer",
   },
-  success: {
-    color: "green",
-    marginBottom: "14px",
+
+  disabledButton: {
+    opacity: 0.6,
+    cursor: "not-allowed",
   },
+
+  success: {
+    marginBottom: "18px",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    background: "#ecfdf5",
+    color: "#047857",
+  },
+
   error: {
-    color: "red",
-    marginBottom: "14px",
+    marginBottom: "18px",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    background: "#fff1f2",
+    color: "#be123c",
   },
 };
 

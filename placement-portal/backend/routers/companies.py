@@ -77,3 +77,52 @@ async def update_company_profile(
     return {
         "message": "Company profile updated successfully"
     }
+@router.get("/dashboard")
+async def company_dashboard(current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "company":
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    jobs_count = await database["jobs"].count_documents({
+        "company_user_id": current_user["_id"]
+    })
+
+    applications = database["applications"].find({
+        "company_user_id": current_user["_id"]
+    })
+
+    total_applications = 0
+    pending = 0
+    shortlisted = 0
+    interview = 0
+    selected = 0
+    placed = 0
+    rejected = 0
+
+    async for app in applications:
+        total_applications += 1
+
+        status = app.get("status", "Applied")
+
+        if status == "Applied":
+            pending += 1
+        elif status == "Shortlisted":
+            shortlisted += 1
+        elif status == "Interview":
+            interview += 1
+        elif status == "Selected":
+            selected += 1
+        elif status == "Placed":
+            placed += 1
+        elif status == "Rejected":
+            rejected += 1
+
+    return {
+        "total_jobs": jobs_count,
+        "total_applications": total_applications,
+        "pending": pending,
+        "shortlisted": shortlisted,
+        "interview": interview,
+        "selected": selected,
+        "placed": placed,
+        "rejected": rejected,
+    }

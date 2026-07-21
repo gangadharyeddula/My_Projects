@@ -23,7 +23,7 @@ app.mount(
     name="uploads",
 )
 
-# CORS setup
+
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -36,7 +36,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(admin_router)
 
 # Routers
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])

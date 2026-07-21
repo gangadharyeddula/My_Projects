@@ -28,6 +28,11 @@ import AdminApplications from "./pages/admin/AdminApplications";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyOTP from "./pages/VerifyOTP";
+import ResetPassword from "./pages/ResetPassword";
+import UserAccess from "./pages/admin/UserAccess";
+
 function App() {
   return (
     <AuthProvider>
@@ -149,6 +154,10 @@ function App() {
             }
           />
           <Route
+            path="/reset-password"
+            element={<ResetPassword />}
+          />
+          <Route
             path="/admin/applications"
             element={
               <AdminRoute>
@@ -156,7 +165,22 @@ function App() {
               </AdminRoute>
             }
           />
-
+          <Route
+          path="/verify-otp"
+          element={<VerifyOTP />}
+           />
+          <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+          />
+          <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+          />
+          <Route
+          path="/admin/user-access"
+          element={<UserAccess />}
+          />
           {/* fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

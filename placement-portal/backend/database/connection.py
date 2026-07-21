@@ -3,3 +3,4 @@ from config import MONGODB_URL, DATABASE_NAME
 
 client = AsyncIOMotorClient(MONGODB_URL)
 database = client[DATABASE_NAME]
+otp_collection = database["otp_verifications"]
